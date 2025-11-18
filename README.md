@@ -10,9 +10,12 @@ A **lightweight**, **modular** WebSocket chat server for real-time communication
 - ✅ Message broadcasting to all clients
 - ✅ Private messaging between specific clients
 - ✅ Client connection/disconnection handling
-- ✅ Custom event handlers
+- ✅ Custom event handlers with error isolation
 - ✅ Client metadata tracking
-- ✅ Graceful shutdown support
+- ✅ Configurable logging (can be disabled)
+- ✅ Promise-based graceful shutdown
+- ✅ Message type constants for type safety
+- ✅ Comprehensive error handling
 
 ## Installation
 
@@ -48,10 +51,13 @@ Open `examples/client.html` in multiple browser tabs to test multi-client commun
 You can easily import this chat server into any Node.js project:
 
 ```javascript
-import ChatServer from 'websocket-chatroom';
+import ChatServer, { MessageTypes } from 'websocket-chatroom';
 
 const server = new ChatServer({ port: 8080 });
 server.start();
+
+// Use MessageTypes constants
+server.broadcast({ type: MessageTypes.MESSAGE, text: 'Hello!' });
 ```
 
 ### API Reference
@@ -61,9 +67,10 @@ server.start();
 ```javascript
 const chatServer = new ChatServer({
   port: 8080,                    // Server port (default: 8080)
+  logging: true,                 // Enable/disable logging (default: true)
   onClientConnect: (clientId, clientInfo) => {},    // Called when client connects
   onClientDisconnect: (clientId, clientInfo) => {}, // Called when client disconnects
-  onMessage: (clientId, message) => {},             // Called when message received
+  onMessage: (clientId, message) => {},             // Called when message received (return true to prevent default broadcast)
   onError: (error, clientId) => {}                  // Called on error
 });
 ```
@@ -78,10 +85,15 @@ chatServer.start();
 ```
 
 ##### `stop()`
-Stop the server and disconnect all clients.
+Stop the server and disconnect all clients. Returns a Promise.
 
 ```javascript
-chatServer.stop();
+await chatServer.stop();
+
+// Or with .then()
+chatServer.stop().then(() => {
+  console.log('Server stopped');
+});
 ```
 
 ##### `sendToClient(clientId, message)`
@@ -128,6 +140,16 @@ Get the number of connected clients.
 
 ```javascript
 const count = chatServer.getClientCount();
+```
+
+##### `isClientConnected(clientId)`
+Check if a specific client is connected.
+
+```javascript
+const isConnected = chatServer.isClientConnected(5);
+if (isConnected) {
+  console.log('Client 5 is online');
+}
 ```
 
 ##### `disconnectClient(clientId, reason)`
@@ -272,6 +294,38 @@ app.post('/api/broadcast', (req, res) => {
     text: req.body.message
   });
   res.json({ sent: chatServer.getClientCount() });
+});
+```
+
+## Message Type Constants
+
+The server exports `MessageTypes` constants for type safety:
+
+```javascript
+import { MessageTypes } from 'websocket-chatroom';
+
+console.log(MessageTypes.WELCOME);          // 'welcome'
+console.log(MessageTypes.USER_JOINED);      // 'user-joined'
+console.log(MessageTypes.USER_LEFT);        // 'user-left'
+console.log(MessageTypes.MESSAGE);          // 'message'
+console.log(MessageTypes.ERROR);            // 'error'
+console.log(MessageTypes.DISCONNECT);       // 'disconnect'
+console.log(MessageTypes.PRIVATE_MESSAGE);  // 'private-message'
+```
+
+Use these constants instead of hardcoding strings:
+
+```javascript
+// Good
+chatServer.sendToClient(clientId, {
+  type: MessageTypes.ERROR,
+  message: 'Something went wrong'
+});
+
+// Also works, but less type-safe
+chatServer.sendToClient(clientId, {
+  type: 'error',
+  message: 'Something went wrong'
 });
 ```
 

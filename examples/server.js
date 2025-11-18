@@ -1,8 +1,9 @@
-import ChatServer from '../src/ChatServer.js';
+import ChatServer, { MessageTypes } from '../src/ChatServer.js';
 
 // Create a chat server instance
 const chatServer = new ChatServer({
   port: 8080,
+  logging: true, // Enable logging (default: true)
 
   // Optional: Custom event handlers
   onClientConnect: (clientId, clientInfo) => {
@@ -22,7 +23,7 @@ const chatServer = new ChatServer({
       const targetId = message.targetId;
       if (targetId) {
         chatServer.sendToClient(targetId, {
-          type: 'private-message',
+          type: MessageTypes.PRIVATE_MESSAGE,
           from: clientId,
           message: message.text,
           timestamp: new Date().toISOString()
@@ -60,17 +61,20 @@ setInterval(() => {
 }, 30000);
 
 // Graceful shutdown
-process.on('SIGINT', () => {
+const gracefulShutdown = async () => {
   console.log('\nShutting down server...');
-  chatServer.stop();
-  process.exit(0);
-});
+  try {
+    await chatServer.stop();
+    console.log('Server stopped successfully');
+    process.exit(0);
+  } catch (error) {
+    console.error('Error during shutdown:', error);
+    process.exit(1);
+  }
+};
 
-process.on('SIGTERM', () => {
-  console.log('\nShutting down server...');
-  chatServer.stop();
-  process.exit(0);
-});
+process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);
 
 console.log('Chat server is running!');
 console.log('Press Ctrl+C to stop');
