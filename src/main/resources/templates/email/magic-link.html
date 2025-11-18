@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .button { display: inline-block; padding: 12px 24px; background-color: #007bff;
+                  color: white; text-decoration: none; border-radius: 4px; }
+        .footer { margin-top: 30px; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Sign In to Your Account</h2>
+        <p>Click the button below to sign in to your account:</p>
+
+        <p style="text-align: center; margin: 30px 0;">
+            <a th:href="${magicLink}" class="button">Sign In Now</a>
+        </p>
+
+        <p>Or copy and paste this link into your browser:</p>
+        <p style="word-break: break-all;" th:text="${magicLink}"></p>
+
+        <div class="footer">
+            <p>This link will expire in <span th:text="${expiryMinutes}"></span> minutes.</p>
+            <p>If you didn't request this email, you can safely ignore it.</p>
+        </div>
+    </div>
+</body>
+</html>
+

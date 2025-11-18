@@ -1,0 +1,115 @@
+spring:
+  application:
+    name: magic-link-service
+
+  datasource:
+    # Use in-memory H2 for local development (no external DB dependency)
+    url: jdbc:h2:mem:magiclink;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+  thymeleaf:
+    cache: false
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    # Use environment variables for credentials (safer). Defaults shown for convenience — override in CI/production.
+    username: ${MAIL_USERNAME:shahinbeg80@gmail.com}
+    password: ${MAIL_PASSWORD:zstnslhqoiprmdmh}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:true}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS:true}
+
+  session:
+    # Use in-memory HTTP session (no Redis)
+    store-type: none
+
+  # Use Spring's simple cache (ConcurrentMapCache) which requires no extra dependency
+  cache:
+    type: simple
+
+  security:
+    oauth2:
+      client:
+        registration:
+          revo:
+            client-id: ${REVO_CLIENT_ID:revo-playwright-service-account-client}
+            client-secret: ${REVO_CLIENT_SECRET:pVFISliG6vHD6B8S2wSiMAZ6IAbClTRr}
+            scope:
+              - openid
+              - email
+              - profile
+            redirect-uri: "http://localhost:18080/login/oauth2/code/revo"
+            authorization-grant-type: authorization_code
+        provider:
+          revo:
+            issuer-uri: http://localhost:8081/realms/revo
+            authorization-uri: http://localhost:8081/realms/revo/protocol/openid-connect/auth
+            token-uri: http://localhost:8081/realms/revo/protocol/openid-connect/token
+            user-info-uri: http://localhost:8081/realms/revo/protocol/openid-connect/userinfo
+            jwk-set-uri: http://localhost:8081/realms/revo/protocol/openid-connect/certs
+            user-name-attribute: preferred_username
+
+  docker:
+    compose:
+      enabled: true
+      lifecycle-management: start_and_stop
+
+server:
+  port: 18080
+
+auth:
+  headers:
+    subject: X-Subject
+  oauth2:
+    resource-server: http://localhost:8081
+    realm: revo
+
+springdoc:
+  swagger-ui:
+    schemes-names:
+      oauth2: oauth2
+      x-subject: x-subject
+    oauth:
+      realm: revo
+      client-id: revo-playwright-service-account-client
+      client-secret: pVFISliG6vHD6B8S2wSiMAZ6IAbClTRr
+    enabled: true
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  show-actuator: false
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json
+
+app:
+  magic-link:
+    token-expiry-minutes: 15
+    base-url: http://localhost:18080
+    frontend-redirect-url: http://localhost:3000/form
+  qr-login:
+    token-expiry-minutes: 5
+# Disable Redis usage
+app.redis:
+  enabled: false
+
+# SpringDoc OpenAPI Configuration
+
+# Notes:
+# - When running locally the app will use the in-memory H2 DB and in-memory cache.
+# - Supply mail credentials via environment variables or .env if using docker-compose.

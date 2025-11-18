@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Magic Link Generated</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4">Registration Magic Link Generated</h2>
+
+                    <div class="alert alert-success" role="alert">
+                        <h5 class="alert-heading">Success!</h5>
+                        <p>Your registration magic link has been generated. Click the link below to continue with registration.</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Your Magic Link:</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" th:value="${magicLink}" id="magicLinkInput" readonly>
+                            <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard()">
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <a th:href="${magicLink}" class="btn btn-primary btn-lg">
+                            Click Here to Register
+                        </a>
+                    </div>
+
+                    <div class="mt-4">
+                        <small class="text-muted">
+                            Token: <code th:text="${token}"></code>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function copyToClipboard() {
+        const input = document.getElementById('magicLinkInput');
+        input.select();
+        document.execCommand('copy');
+        alert('Magic link copied to clipboard!');
+    }
+</script>
+</body>
+</html>

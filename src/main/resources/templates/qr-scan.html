@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>QR Login - Waiting for Approval</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div id="waitingState">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <h4>Waiting for Approval</h4>
+                        <p class="text-muted">Please approve this login on your other device</p>
+                        <p class="mb-4">Logging in as: <strong th:text="${userEmail}"></strong></p>
+                    </div>
+
+                    <div id="approvedState" style="display: none;">
+                        <div class="text-success mb-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
+                            </svg>
+                        </div>
+                        <h4>Approved!</h4>
+                        <p class="text-muted">Redirecting...</p>
+                    </div>
+
+                    <div id="deniedState" style="display: none;">
+                        <div class="text-danger mb-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                            </svg>
+                        </div>
+                        <h4>Login Denied</h4>
+                        <p class="text-muted">The login request was denied</p>
+                        <a href="/login" class="btn btn-primary mt-3">Try Again</a>
+                    </div>
+
+                    <div id="expiredState" style="display: none;">
+                        <div class="text-warning mb-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-clock" viewBox="0 0 16 16">
+                                <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+                            </svg>
+                        </div>
+                        <h4>QR Code Expired</h4>
+                        <p class="text-muted">Please request a new QR code</p>
+                        <a href="/login" class="btn btn-primary mt-3">Back to Login</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    const token = /*[[${token}]]*/ '';
+    let pollInterval;
+    let pollCount = 0;
+    const maxPolls = 150;
+
+    function checkStatus() {
+        pollCount++;
+
+        if (pollCount > maxPolls) {
+            clearInterval(pollInterval);
+            showExpired();
+            return;
+        }
+
+        fetch('/qr/status?token=' + token)
+            .then(response => response.json())
+            .then(data => {
+                if (data.authenticated) {
+                    clearInterval(pollInterval);
+                    showApproved();
+                    setTimeout(() => {
+                        window.location.href = data.redirectUrl || '/';
+                    }, 1500);
+                } else if (data.status === 'DENIED') {
+                    clearInterval(pollInterval);
+                    showDenied();
+                } else if (data.status === 'EXPIRED') {
+                    clearInterval(pollInterval);
+                    showExpired();
+                } else if (data.error) {
+                    clearInterval(pollInterval);
+                    showDenied();
+                }
+            })
+            .catch(err => console.error('Poll error:', err));
+    }
+
+    function showApproved() {
+        document.getElementById('waitingState').style.display = 'none';
+        document.getElementById('approvedState').style.display = 'block';
+    }
+
+    function showDenied() {
+        document.getElementById('waitingState').style.display = 'none';
+        document.getElementById('deniedState').style.display = 'block';
+    }
+
+    function showExpired() {
+        document.getElementById('waitingState').style.display = 'none';
+        document.getElementById('expiredState').style.display = 'block';
+    }
+
+    pollInterval = setInterval(checkStatus, 2000);
+    checkStatus();
+</script>
+</body>
+</html>
