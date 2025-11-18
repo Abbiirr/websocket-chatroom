@@ -1,0 +1,23 @@
+{
+  "name": "websocket-chatroom",
+  "version": "1.0.0",
+  "description": "A lightweight WebSocket chat server for real-time communication between multiple clients",
+  "main": "src/ChatServer.js",
+  "type": "module",
+  "scripts": {
+    "start": "node examples/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "websocket",
+    "chat",
+    "server",
+    "real-time",
+    "lightweight"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.14.2"
+  }
+}
