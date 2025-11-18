@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(.\\gradlew build:*)",
+      "Bash(gradlew.bat build:*)",
+      "Bash(./gradlew.bat:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
